@@ -1,69 +1,62 @@
-var Queue = require('bull');
-var connect  = require('connect')
-var httpProxy = require('http-proxy')
-var config = { "proxy":{} }; // will be filled by conf.d/*
-var proxy = {}
+var connect     = require('connect')
+var bullmq      = require('./lib/bullmq');
+var httpProxy   = require('http-proxy')
+var amqp        = require('amqp');
+var RateLimiter = require("limiter").RateLimiter;
+var config      = { "debug":true, "proxy":{}, "queue":{}, "limiters":{} }; // will be filled by conf.d/*
+var proxy       = {}
+var limiters    = {"default": new RateLimiter( 5000, 'hour',true)};
+var amqpUse     = false;
 
-// Load configurations in conf.d/*
-require('fs').readdirSync( 'conf.d/' ).forEach(function(file) {
-  if (file.match(/.+\.js/g) !== null) {
-    var name = file.replace('.js', '');
-    exports[name] = require('./conf.d/' + file);
-    config.proxy = exports[name].proxy(config.proxy);
-  }
-});
+config   = bullmq.loadconfig(config);
+proxy    = bullmq.initproxies(config,proxy,httpProxy);
+limiters = bullmq.initlimiters(config);
 
-// initialize proxies
-for( var p in config.proxy ){
-  if( proxy[p] == undefined ) proxy[p] = [];
-  for( var target in config.proxy[p] ){
-    proxy[p].push( httpProxy.createProxyServer({target: config.proxy[p][target] }) );
-    console.log("adding proxy %s => %s", p, config.proxy[p][target] );
-  }
+function start(amqp){
+  connect.createServer(false,
+    function (req, res) {
+      try{
+        var host = req.headers.host;
+        bullmq.log("=> "+host+req.url);
+        var limiter = limiters[host+req.url] || limiters[host] || limiters['default'];
+        limiter.removeTokens( 1, function(err, remainingRequests){
+          bullmq.log( "remaining calls: "+limiter.getTokensRemaining()  );
+          if( limiter.getTokensRemaining() < 1 ){
+            res.setHeader("Context-Type: text/plain");
+            res.end( JSON.stringify( {succes:false, code: 429, msg:"Too Many Requests - your IP is being rate limited",data:{}} ) );
+          }else{
+            if( config.queue[host] != undefined && config.queue[host][req.url] != undefined ){
+                bullmq.log("adding "+req.url+" to queue '"+ config.queue[host][req.url].queue+"'" );
+                var qname = config.queue[host][req.url].queue;
+                bullmq.queue( config, host, req, res, qname, amqpUse ? amqp : false );
+            }else if( proxy[host] != undefined ){
+              var p = proxy[host][ Math.floor(Math.random() * proxy[host].length) ]; // roundrobin loadbalancing
+              p.web(req, res);
+            }else{
+              res.setHeader("Context-Type: text/plain");
+              res.end("bullmq: error 404");
+            }
+          }
+        });
+      }catch (e){ bullmq.log("catch"); console.log(e); }
+    }
+  ).listen( process.env.PORT || 8080 );
 }
 
-var sub = Queue("request_web", 6379, '127.0.0.1');
+bullmq.log(" _       _ _           ");
+bullmq.log("| |_ _ _| | |_____ ___ ");
+bullmq.log("| . | | | | |     | . |");
+bullmq.log("|___|___|_|_|_|_|_|_  |");
+bullmq.log("                    |_|");
+bullmq.log("listening at port "+ (process.env.PORT || 8080) );
+bullmq.log("config:");
+bullmq.log( bullmq.indentJSON(config) );
 
-// And receive as well
-sub.process(function(msg, msgDone){
-  console.log('Received message: %s', msg.data.url);
-  msgDone();
-});
+if( amqpUse ){
+  var amqpConn    = amqp.createConnection({ host: 'dev.rabbitmq.com' });
+  // Wait for connection to become established.
+  connection.on('ready', function () {
+    start(this);
+  });
+}else start();
 
-// we can send any JSON stringfiable data
-var pub = Queue("request_web", 6379, '127.0.0.1');
-setTimeout( function(){
-  pub.add({url: '/foo/bar?123'});
-},100 );
-
-
-connect.createServer(
-  function (req, res, next) {
-    var _write = res.write;
-    //res.write = function (data) {
-    //  _write.call(res, data.toString().replace("Ruby", "nodejitsu"));
-    //}
-    next();
-  },
-  function (req, res) {
-    try{
-      var host = req.headers.host;
-      if( proxy[host] == undefined ){
-        res.setHeader("Context-Type: text/plain");
-        res.end("bullmq: error 500");
-      }else{
-        var p = proxy[host][ Math.floor(Math.random() * proxy[host].length) ];
-        p.web(req, res);
-      }
-    }catch (e){ console.log("catch"); console.log(e); }
-  }
-).listen( process.env.PORT || 8080 );
-
-function log(msg){
-  console.log((new Date()) + '> ' + msg );
-}
-
-log("proxyServer listening at port "+ (process.env.PORT || 8080) );
-log("config:");
-console.log("%j", config );
-console.log("%j", proxy );
