@@ -1,0 +1,6 @@
+#!/bin/bash 
+. CONFIG
+
+# database needs to be configured in order to have persistence
+redis-cli CONFIG SET dir /tmp
+redis-cli CONFIG SET dbfilename bull-$PROJECTNAME.rdb
