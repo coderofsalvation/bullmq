@@ -12,7 +12,7 @@ Prevent server/application-panic by limiting and rerouting webrequests to differ
 ### Isnt there already software for this?
 
 There are many enterprise-ish packages out there, but I wanted something deadsimple to configure.
-Next to that AMQP will be able to scale out to big servicebusses like RabbitMQ e.g.
+Next to that AMQP-support (not finished) will be able to scale out to big servicebusses like RabbitMQ e.g.
 
 ### Concepts
 
