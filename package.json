@@ -1,0 +1,37 @@
+{
+  "name": "bullmq",
+  "version": "0.0.0",
+  "description": "http proxy + throttling + message/job queue based on nodejs bull",
+  "main": "app.js",
+  "directories": {
+    "doc": "doc"
+  },
+  "scripts": {
+    "test": "testosteron"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/coderofsalvation/bullmq.git"
+  },
+  "dependencies": {
+    "http-proxy":   "~1.1.2",
+    "bull":   "~0.1.6"
+  },
+  "keywords": [
+    "http",
+    "proxy",
+    "throttling",
+    "message/job",
+    "queue",
+    "based",
+    "on",
+    "nodejs",
+    "bull"
+  ],
+  "author": "Coder of Salvation",
+  "license": "BSD",
+  "bugs": {
+    "url": "https://github.com/coderofsalvation/bullmq/issues"
+  },
+  "homepage": "https://github.com/coderofsalvation/bullmq"
+}
