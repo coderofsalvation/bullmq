@@ -1,5 +1,5 @@
 #!/bin/bash 
-. CONFIG
+. config
 
 # database needs to be configured in order to have persistence
 redis-cli CONFIG SET dir /tmp
