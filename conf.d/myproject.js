@@ -12,8 +12,9 @@ exports.proxy = function(config){
 // here you can limit per domain and even url
 // units: day,hour,minute,second
 exports.limiters = function(config){
-  config["localhost:8080"]     = { unit: "minute", rate:90 };  // 90 requests per minute 
-  config["localhost:8080/foo"] = { unit: "minute", rate:20 };  // overrides 90 with 20 
+  config["default"]            = { unit: "minute", rate:9999 };  // default limiter *DO NOT REMOVE*
+  config["localhost:8080"]     = { unit: "minute", rate:90 };    // 90 requests per minute 
+  config["localhost:8080/foo"] = { unit: "minute", rate:20 };    // overrides 90 with 20 
   return config;
 }
 
