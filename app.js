@@ -24,7 +24,6 @@ limiters = bullmq.initlimiters(config);
 function start(amqp){
   var bullmqproxyServer = http.createServer(function (req, res) {
     req.socket.on('close', function() {
-      bullmq.log("socket closed");
     });
     req.socket.on('error', function() {
       bullmq.log("timeout");
@@ -36,26 +35,28 @@ function start(amqp){
     });
     try{
       var host = req.headers.host;
-      bullmq.log("=> "+host+req.url);
+      var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
       var limiter = limiters[host+req.url] || limiters[host] || limiters['default'];
+      var bucket = limiter.getTokensRemaining();
       limiter.removeTokens( 1, function(err, remainingRequests){
-        bullmq.log( "remaining calls: "+limiter.getTokensRemaining()  );
-        if( limiter.getTokensRemaining() < 1 ){
+        if( bucket < 1 ){
+          bullmq.log("REJECT => "+host+req.url+" from "+ip+" (bucket:"+bucket+")" );
           res.setHeader("Context-Type: text/plain");
           res.end( JSON.stringify( {succes:false, code: 429, msg:"Too Many Requests - your IP is being rate limited",data:{}} ) );
         }else{
           if( config.queue[host] != undefined && config.queue[host][req.url] != undefined ){
               bullmq.log("adding "+req.url+" to queue '"+ config.queue[host][req.url].queue+"'" );
               var qname = config.queue[host][req.url].queue;
+              bullmq.log("QUEUED => "+host+req.url+" from "+ip+" (bucket:"+bucket+")" );
               bullmq.queue( config, host, req, res, qname, amqpUse ? amqp : false );
           }else{
             var p = proxy[host] ? proxy[host][ Math.floor(Math.random() * proxy[host].length) ] : proxy["default"][0]; // roundrobin loadbalancing
+            bullmq.log("ACCEPT => "+host+req.url+" from "+ip+" (bucket:"+bucket+")" );
             p.web(req, res);
           }
         }
       });
     }catch (e){ bullmq.log("catch"); console.log(e); }
-    bullmq.log("continueing");
   }).on('upgrade', function (req, socket, head) {
     // not implemented yet
     // proxy.ws(req, socket, head);

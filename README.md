@@ -73,3 +73,21 @@ If a redis- or amqp-subscriber does snot respond with a 'completed'-event to the
 
 If a subscriber *does* respond within the timeout-timeframe, it can respond with a "queued", "processing" or "ok" reply.
 Example: user wants to encode 4 video's, clients are firing hundreds of push requests to the databases etc.
+
+
+### Syslog
+
+logging can be directed to stdout and/or syslog.
+Here's some syslog output :
+
+    May  9 10:01:41 bullmq [26639]: ACCEPT => www.yourdomain/tpl/front/gfx/search_black.png from 94.214.179.213 (bucket:232.06
+    May  9 10:01:41 bullmq [26639]: ACCEPT => www.yourdomain/lib/flop/site/tpl/gfx/terminal.empty.gif from 94.214.179.213 (buc
+    May  9 10:01:45 bullmq [26639]: ACCEPT => www.yourdomain/js/?hash=MjAxMS0wNi90dHlyZWNvcmQtMTMwODMxODg4Mw== from 65.49.68.1
+    May  9 10:01:45 bullmq [26639]: ACCEPT => www.yourdomain/js/?hash=MjAxMS0wNi90dHlyZWNvcmQtMTMwNjk2NjA2NQ== from 65.49.2.17
+    May  9 10:01:48 bullmq [26639]: ACCEPT => www.yourdomain/lib/flop/js/gfx/flop.button.white.png from 65.49.68.165 (bucket:2
+    May  9 10:01:48 bullmq [26639]: ACCEPT => www.yourdomain/lib/flop/js/gfx/flop.skin.gif from 65.49.2.175 (bucket:227.572666
+    May  9 10:01:50 bullmq [26639]: ACCEPT => www.yourdomain/r/MjAxMy0xMC90dHlyZWNvcmR0dHktMTM4MTU3NjE5Nnw4MHgyNA== from 157.5
+    May  9 10:02:10 bullmq [26639]: ACCEPT => www.yourdomain/ from 94.214.179.213 (bucket:227.02533333333335)
+    May  9 10:02:11 bullmq [26639]: ACCEPT => www.yourdomain/lib/core/functions.js from 94.214.179.213 (bucket:226.07126666666
+
+NOTE: the bucket number is how much requests are possible for that url before rate-limiting kicks in.
