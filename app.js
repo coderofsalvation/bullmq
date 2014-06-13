@@ -21,6 +21,10 @@ config   = bullmq.loadconfig(config);
 proxy    = bullmq.initproxies(config,proxy,httpProxy);
 limiters = bullmq.initlimiters(config);
 
+process.on('uncaughtException', function (err) {
+  bullmq.log(err);
+}); 
+
 function start(amqp){
   var bullmqproxyServer = http.createServer(function (req, res) {
     req.socket.on('close', function() {
