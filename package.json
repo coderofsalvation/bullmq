@@ -1,24 +1,25 @@
 {
   "name": "bullmq",
-  "version": "0.0.0",
-  "description": "http proxy + throttling + message/job queue based on nodejs bull",
+  "version": "0.0.1",
+  "description": "api http proxy + throttling/ratelimiting + message/job queue based on nodejs bull",
   "main": "app.js",
   "directories": {
-    "doc": "doc"
+    "doc": "doc",
+    "test": "test"
   },
   "scripts": {
-    "test": "testosteron"
+    "test": "node test/test.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/coderofsalvation/bullmq.git"
   },
   "dependencies": {
-    "http-proxy":   "~1.1.2",
+    "http-proxy": "~1.1.2",
     "limiter": "~1.0.5",
     "syslogger": "~0.1.0",
     "amqp": "~0.2.0",
-    "bull":   "~0.1.6"
+    "bull": "~0.1.6"
   },
   "keywords": [
     "http",
@@ -36,5 +37,6 @@
   "bugs": {
     "url": "https://github.com/coderofsalvation/bullmq/issues"
   },
-  "homepage": "https://github.com/coderofsalvation/bullmq"
+  "homepage": "https://github.com/coderofsalvation/bullmq",
+  "devDependencies": {}
 }
