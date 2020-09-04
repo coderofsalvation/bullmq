@@ -15,7 +15,7 @@
     "url": "https://github.com/coderofsalvation/bullmq.git"
   },
   "dependencies": {
-    "http-proxy": "~1.1.2",
+    "http-proxy": "~1.18.1",
     "limiter": "~1.0.5",
     "syslogger": "~0.1.0",
     "amqp": "~0.2.0",
